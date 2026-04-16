@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload</title>
+    <style>
+        body { font-family: Arial; max-width: 600px; margin: 50px auto; padding: 20px; }
+        input, button { margin: 10px 0; padding: 10px; width: 100%; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #result { margin-top: 20px; padding: 10px; background: #f0f0f0; }
+        img { max-width: 100%; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h2>Upload Image</h2>
+    <input type="text" id="name" placeholder="Enter name">
+    <input type="file" id="imageFile" accept="image/*">
+    <button onclick="uploadImage()">Upload</button>
+    <div id="result"></div>
+
+    <h2>All Images</h2>
+    <button onclick="getAllImages()">Get All Images</button>
+    <div id="images"></div>
+
+    <script>
+        async function uploadImage() {
+            const name = document.getElementById('name').value;
+            const file = document.getElementById('imageFile').files[0];
+            
+            if (!name || !file) {
+                alert('Please enter name and select image');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('image', file);
+
+            try {
+                const response = await fetch('http://localhost:5000/api/user/image', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                document.getElementById('result').innerHTML = `
+                    <p>${data.message}</p>
+                    <p>Name: ${data.user.name}</p>
+                    <img src="${data.user.image}" alt="Uploaded">
+                `;
+            } catch (error) {
+                document.getElementById('result').innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+
+        async function getAllImages() {
+            try {
+                const response = await fetch('http://localhost:5000/api/user/all');
+                const data = await response.json();
+                
+                const imagesDiv = document.getElementById('images');
+                imagesDiv.innerHTML = data.user.map(u => `
+                    <div style="border: 1px solid #ddd; padding: 10px; margin: 10px 0;">
+                        <p><strong>Name:</strong> ${u.name}</p>
+                        ${u.image ? `<img src="${u.image}" alt="${u.name}">` : '<p>No image</p>'}
+                    </div>
+                `).join('');
+            } catch (error) {
+                document.getElementById('images').innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
