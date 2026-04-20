@@ -12,6 +12,7 @@
   },
   "type": "module",
   "scripts": {
-    "dev": "nodemon App.js"
+    "dev": "nodemon App.js",
+    "start": "node App,js"
   }
 }
