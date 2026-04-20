@@ -20,21 +20,35 @@ dotenv.config({ path: "./config/config.env" });
 
 const app = express();
 
-// MIDDLEWARE
-app.use(cors());
+/* ================= CORS FIX ================= */
+
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://event-booking-app-iur7.vercel.app" // ✅ FIXED
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
+
+/* ================= MIDDLEWARE ================= */
+
 app.use(express.json());
 
-// STATIC FOLDER
+/* ================= STATIC ================= */
+
 app.use("/upload", express.static("upload"));
 
-// DATABASE
+/* ================= DATABASE ================= */
+
 dbConnection();
 
-// ROUTES
+/* ================= ROUTES ================= */
+
 app.use("/api/user", userRouter);
 app.use("/api/gallery", galleryRouters);
 app.use("/api/admin", adminRoutes);
-app.use("/api/admin", adminDashboardRoutes);   // ✅ dashboard route
+app.use("/api/admin", adminDashboardRoutes);
 app.use("/api/admin", adminAnalyticsRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/events", eventRoutes);
@@ -42,8 +56,14 @@ app.use("/api/booking", bookingRoutes);
 app.use("/api/category", categoryRoutes);
 app.use("/api/notifications", notificationRoutes);
 
+/* ================= TEST ROUTE ================= */
 
-// SERVER
+app.get("/", (req, res) => {
+  res.send("API is running...");
+});
+
+/* ================= SERVER ================= */
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
