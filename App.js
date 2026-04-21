@@ -22,12 +22,22 @@ const app = express();
 
 /* ================= CORS FIX ================= */
 
+const allowedOrigins = [
+  "http://localhost:5173",
+   "http://localhost:5174",
+  "https://event-booking-app-iur7.vercel.app"
+];
+
 app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://event-booking-app-iur7.vercel.app" // ✅ FIXED
-  ],
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(null, true); // allow all for now (avoid blocking)
+    }
+  },
   credentials: true
 }));
 
@@ -56,7 +66,7 @@ app.use("/api/booking", bookingRoutes);
 app.use("/api/category", categoryRoutes);
 app.use("/api/notifications", notificationRoutes);
 
-/* ================= TEST ROUTE ================= */
+/* ================= TEST ================= */
 
 app.get("/", (req, res) => {
   res.send("API is running...");

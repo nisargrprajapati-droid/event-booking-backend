@@ -1,13 +1,13 @@
 import Event from "../model/EventModel.js";
 
-/* ================= CREATE EVENT ================= */
+
 export const createEvent = async (req, res) => {
   try {
 
     let imageUrl = "";
 
     if (req.file) {
-      imageUrl = `http://localhost:5000/upload/${req.file.filename}`;
+      imageUrl = `${process.env.BASE_URL}/upload/${req.file.filename}`;
     }
 
     const price = Number(req.body.price);
@@ -15,16 +15,9 @@ export const createEvent = async (req, res) => {
     const event = new Event({
       title: req.body.title,
       location: req.body.location,
-
-      // ✅ ADMIN PRICE
       adminPrice: price,
-
-      // ✅ SAME AS ADMIN (INITIAL)
       userPrice: price,
-
-      // ✅ USER NOT MODIFIED
       isUserPriceManual: false,
-
       category: req.body.category.toLowerCase(),
       image: imageUrl,
       date: req.body.date,
@@ -36,23 +29,14 @@ export const createEvent = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Event created successfully",
       data: event
     });
 
   } catch (error) {
-
-    console.error("CREATE EVENT ERROR:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Error creating event",
-      error: error.message
-    });
-
+    console.error(error);
+    res.status(500).json({ message: error.message });
   }
 };
-
 /* ================= GET ALL EVENTS (ADMIN) ================= */
 export const getEvents = async (req, res) => {
   try {

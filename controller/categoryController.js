@@ -3,8 +3,9 @@ import Category from "../model/CategoryModel.js";
 // CREATE CATEGORY
 export const createCategory = async (req, res) => {
   try {
-    const image = req.file ? `http://localhost:5000/upload/${req.file.filename}` : "";
-
+   const image = req.file
+  ? `${process.env.BASE_URL}/upload/${req.file.filename}`
+  : "";
     const category = new Category({
       name: req.body.name,
       image
