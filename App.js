@@ -27,16 +27,24 @@ const allowedOrigins = [
    "http://localhost:5174",
   "https://event-booking-app-iur7.vercel.app"
 ];
-
 app.use(cors({
   origin: function (origin, callback) {
+
+    // allow requests with no origin (like Postman)
     if (!origin) return callback(null, true);
 
-    if (allowedOrigins.includes(origin)) {
+    // ✅ allow ANY localhost port
+    if (origin.startsWith("http://localhost")) {
       return callback(null, true);
-    } else {
-      return callback(null, true); // allow all for now (avoid blocking)
     }
+
+    // ✅ allow your deployed frontend
+    if (origin === "https://event-booking-app-iur7.vercel.app") {
+      return callback(null, true);
+    }
+
+    // ❌ block others
+    return callback(new Error("Not allowed by CORS"));
   },
   credentials: true
 }));
