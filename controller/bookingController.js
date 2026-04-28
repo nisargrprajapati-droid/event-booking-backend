@@ -1,8 +1,7 @@
 import Booking from "../models/BookingModel.js";
 import Notification from "../model/NotificationModel.js";
 
-
-// CREATE BOOKING
+// ================= CREATE BOOKING =================
 export const createBooking = async (req, res) => {
   try {
 
@@ -23,7 +22,7 @@ export const createBooking = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Ticket booked successfully",
-      data: populatedBooking
+      data: populatedBooking   // ✅ keep as data
     });
 
   } catch (error) {
@@ -37,16 +36,16 @@ export const createBooking = async (req, res) => {
 };
 
 
-// GET ALL BOOKINGS (ADMIN)
+// ================= GET ALL BOOKINGS =================
 export const getBookings = async (req, res) => {
   try {
 
     const bookings = await Booking.find()
       .populate("eventId");
 
-    res.json({
+    res.status(200).json({
       success: true,
-      bookings
+      data: bookings   // ✅ FIX: change bookings → data
     });
 
   } catch (error) {

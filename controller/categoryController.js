@@ -1,31 +1,44 @@
 import Category from "../model/CategoryModel.js";
 
-// CREATE CATEGORY
 export const createCategory = async (req, res) => {
   try {
-   const image = req.file
-  ? `${process.env.BASE_URL}/upload/${req.file.filename}`
-  : "";
-    const category = new Category({
-      name: req.body.name,
+    const { name } = req.body;
+
+    if (!name || !req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "Name and image required"
+      });
+    }
+
+    const image = `${process.env.BASE_URL}/upload/${req.file.filename}`;
+
+    const category = await Category.create({
+      name,
       image
     });
 
-    await category.save();
+    res.status(201).json({
+      success: true,
+      data: category
+    });
 
-    res.status(201).json({ success: true, message: "Category created", data: category });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.log("CATEGORY ERROR:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
   }
 };
-//getCategory
+
 export const getCategory = async (req, res) => {
   try {
     const categories = await Category.find();
 
     res.status(200).json({
       success: true,
-      data: categories   // ✅ IMPORTANT
+      data: categories
     });
 
   } catch (error) {
@@ -36,8 +49,19 @@ export const getCategory = async (req, res) => {
   }
 };
 
-// DELETE CATEGORY
 export const deleteCategory = async (req, res) => {
-  await Category.findByIdAndDelete(req.params.id);
-  res.json({ message: "Category deleted" });
+  try {
+    await Category.findByIdAndDelete(req.params.id);
+
+    res.json({
+      success: true,
+      message: "Category deleted"
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
 };

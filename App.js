@@ -20,41 +20,22 @@ dotenv.config({ path: "./config/config.env" });
 
 const app = express();
 
-/* ================= CORS FIX ================= */
+/* ================= CORS FIX (FINAL) ================= */
 
-const allowedOrigins = [
-  "http://localhost:5173",
-   "http://localhost:5174",
-  "https://event-booking-app-iur7.vercel.app"
-];
+// 🔥 Allow all origins (BEST for development + Render fix)
 app.use(cors({
-  origin: function (origin, callback) {
-
-    // allow requests with no origin (like Postman)
-    if (!origin) return callback(null, true);
-
-    // ✅ allow ANY localhost port
-    if (origin.startsWith("http://localhost")) {
-      return callback(null, true);
-    }
-
-    // ✅ allow your deployed frontend
-    if (origin === "https://event-booking-app-iur7.vercel.app") {
-      return callback(null, true);
-    }
-
-    // ❌ block others
-    return callback(new Error("Not allowed by CORS"));
-  },
-  credentials: true
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE"],
 }));
 
 /* ================= MIDDLEWARE ================= */
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-/* ================= STATIC ================= */
+/* ================= STATIC FILES ================= */
 
+// 🔥 Important for image access
 app.use("/upload", express.static("upload"));
 
 /* ================= DATABASE ================= */
@@ -74,7 +55,7 @@ app.use("/api/booking", bookingRoutes);
 app.use("/api/category", categoryRoutes);
 app.use("/api/notifications", notificationRoutes);
 
-/* ================= TEST ================= */
+/* ================= TEST ROUTE ================= */
 
 app.get("/", (req, res) => {
   res.send("API is running...");
@@ -85,5 +66,5 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
 });

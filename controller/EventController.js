@@ -1,6 +1,6 @@
 import Event from "../model/EventModel.js";
 
-
+/* ================= CREATE EVENT ================= */
 export const createEvent = async (req, res) => {
   try {
 
@@ -33,15 +33,14 @@ export const createEvent = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: error.message });
   }
 };
-/* ================= GET ALL EVENTS (ADMIN) ================= */
+
+/* ================= GET ALL EVENTS ================= */
 export const getEvents = async (req, res) => {
   try {
 
-    // ✅ ADMIN SHOULD SEE ALL EVENTS
     const events = await Event.find().sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -50,24 +49,18 @@ export const getEvents = async (req, res) => {
     });
 
   } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-
+    res.status(500).json({ message: error.message });
   }
 };
 
-/* ================= GET EVENTS BY CATEGORY (USER) ================= */
+/* ================= GET BY CATEGORY ================= */
 export const getByCategory = async (req, res) => {
   try {
 
     const category = req.params.category.toLowerCase();
 
-    // ✅ USER ONLY SEE ACTIVE EVENTS
     const events = await Event.find({
-      category: category,
+      category,
       status: "active"
     });
 
@@ -77,26 +70,18 @@ export const getByCategory = async (req, res) => {
     });
 
   } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-
+    res.status(500).json({ message: error.message });
   }
 };
 
-/* ================= GET SINGLE EVENT ================= */
+/* ================= GET SINGLE ================= */
 export const getSingle = async (req, res) => {
   try {
 
     const event = await Event.findById(req.params.id);
 
     if (!event) {
-      return res.status(404).json({
-        success: false,
-        message: "Event not found"
-      });
+      return res.status(404).json({ message: "Event not found" });
     }
 
     res.status(200).json({
@@ -105,12 +90,7 @@ export const getSingle = async (req, res) => {
     });
 
   } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -124,17 +104,13 @@ export const updateAdminPrice = async (req, res) => {
     const event = await Event.findById(id);
 
     if (!event) {
-      return res.status(404).json({
-        success: false,
-        message: "Event not found"
-      });
+      return res.status(404).json({ message: "Event not found" });
     }
 
     const newPrice = Number(price);
 
     event.adminPrice = newPrice;
 
-    // ✅ ONLY UPDATE USER PRICE IF USER HAS NOT CHANGED IT
     if (!event.isUserPriceManual) {
       event.userPrice = newPrice;
     }
@@ -143,17 +119,11 @@ export const updateAdminPrice = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Admin price updated",
       data: event
     });
 
   } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -167,36 +137,25 @@ export const updateUserPrice = async (req, res) => {
     const event = await Event.findById(id);
 
     if (!event) {
-      return res.status(404).json({
-        success: false,
-        message: "Event not found"
-      });
+      return res.status(404).json({ message: "Event not found" });
     }
 
     event.userPrice = Number(price);
-
-    // ✅ USER HAS MANUALLY CHANGED PRICE
     event.isUserPriceManual = true;
 
     await event.save();
 
     res.json({
       success: true,
-      message: "User price updated",
       data: event
     });
 
   } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-
+    res.status(500).json({ message: error.message });
   }
 };
 
-/* ================= UPDATE FULL EVENT ================= */
+/* ================= UPDATE EVENT ================= */
 export const updateEvent = async (req, res) => {
   try {
 
@@ -211,28 +170,18 @@ export const updateEvent = async (req, res) => {
     };
 
     if (req.file) {
-      updateData.image = `http://localhost:5000/upload/${req.file.filename}`;
+      updateData.image = `${process.env.BASE_URL}/upload/${req.file.filename}`;
     }
 
-    const event = await Event.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true }
-    );
+    const event = await Event.findByIdAndUpdate(id, updateData, { new: true });
 
     res.json({
       success: true,
-      message: "Event updated successfully",
       data: event
     });
 
   } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -240,31 +189,15 @@ export const updateEvent = async (req, res) => {
 export const deleteEvent = async (req, res) => {
   try {
 
-    const { id } = req.params;
+    await Event.findByIdAndDelete(req.params.id);
 
-    const event = await Event.findByIdAndDelete(id);
-
-    if (!event) {
-      return res.status(404).json({
-        success: false,
-        message: "Event not found"
-      });
-    }
-
-    res.status(200).json({
+    res.json({
       success: true,
-      message: "Event deleted successfully"
+      message: "Deleted"
     });
 
   } catch (error) {
-
-    console.error(error);
-
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -275,28 +208,19 @@ export const toggleEventStatus = async (req, res) => {
     const event = await Event.findById(req.params.id);
 
     if (!event) {
-      return res.status(404).json({
-        success: false,
-        message: "Event not found"
-      });
+      return res.status(404).json({ message: "Event not found" });
     }
 
     event.status = event.status === "active" ? "inactive" : "active";
 
     await event.save();
 
-    res.status(200).json({
+    res.json({
       success: true,
-      message: "Event status updated",
       status: event.status
     });
 
   } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-
+    res.status(500).json({ message: error.message });
   }
 };
