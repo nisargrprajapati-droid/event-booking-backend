@@ -20,32 +20,18 @@ dotenv.config({ path: "./config/config.env" });
 
 const app = express();
 
-/* ================= CORS FIX (FINAL) ================= */
+/* ================= CORS ================= */
 
 app.use(
   cors({
-    origin: "https://event-booking-app-iur7.vercel.app",
+    origin: [
+      "https://event-booking-app-iur7.vercel.app",
+      "http://localhost:5173"
+    ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
 );
-
-// 🔥 Extra safety headers (important for production)
-app.use((req, res, next) => {
-  res.header(
-    "Access-Control-Allow-Origin",
-    "https://event-booking-app-iur7.vercel.app"
-  );
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
-  );
-  res.header(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE"
-  );
-  next();
-});
 
 /* ================= MIDDLEWARE ================= */
 
@@ -54,7 +40,6 @@ app.use(express.urlencoded({ extended: true }));
 
 /* ================= STATIC FILES ================= */
 
-// 🔥 Important for image access
 app.use("/upload", express.static("upload"));
 
 /* ================= DATABASE ================= */
