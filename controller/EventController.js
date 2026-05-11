@@ -1,4 +1,5 @@
 import Event from "../model/EventModel.js";
+import cloudinary from "../config/cloudinary.js";
 
 /* ================= CREATE EVENT ================= */
 export const createEvent = async (req, res) => {
@@ -6,8 +7,12 @@ export const createEvent = async (req, res) => {
 
     let imageUrl = "";
 
+    // CLOUDINARY IMAGE UPLOAD
     if (req.file) {
-      imageUrl = `${process.env.BASE_URL}/upload/${req.file.filename}`;
+
+      const result = await cloudinary.uploader.upload(req.file.path);
+
+      imageUrl = result.secure_url;
     }
 
     const price = Number(req.body.price);
@@ -33,7 +38,12 @@ export const createEvent = async (req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+
+    console.log("CREATE EVENT ERROR:", error);
+
+    res.status(500).json({
+      message: error.message
+    });
   }
 };
 
@@ -49,7 +59,10 @@ export const getEvents = async (req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+
+    res.status(500).json({
+      message: error.message
+    });
   }
 };
 
@@ -70,7 +83,10 @@ export const getByCategory = async (req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+
+    res.status(500).json({
+      message: error.message
+    });
   }
 };
 
@@ -81,7 +97,9 @@ export const getSingle = async (req, res) => {
     const event = await Event.findById(req.params.id);
 
     if (!event) {
-      return res.status(404).json({ message: "Event not found" });
+      return res.status(404).json({
+        message: "Event not found"
+      });
     }
 
     res.status(200).json({
@@ -90,7 +108,10 @@ export const getSingle = async (req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+
+    res.status(500).json({
+      message: error.message
+    });
   }
 };
 
@@ -104,7 +125,9 @@ export const updateAdminPrice = async (req, res) => {
     const event = await Event.findById(id);
 
     if (!event) {
-      return res.status(404).json({ message: "Event not found" });
+      return res.status(404).json({
+        message: "Event not found"
+      });
     }
 
     const newPrice = Number(price);
@@ -123,7 +146,10 @@ export const updateAdminPrice = async (req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+
+    res.status(500).json({
+      message: error.message
+    });
   }
 };
 
@@ -137,7 +163,9 @@ export const updateUserPrice = async (req, res) => {
     const event = await Event.findById(id);
 
     if (!event) {
-      return res.status(404).json({ message: "Event not found" });
+      return res.status(404).json({
+        message: "Event not found"
+      });
     }
 
     event.userPrice = Number(price);
@@ -151,7 +179,10 @@ export const updateUserPrice = async (req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+
+    res.status(500).json({
+      message: error.message
+    });
   }
 };
 
@@ -169,11 +200,19 @@ export const updateEvent = async (req, res) => {
       time: req.body.time
     };
 
+    // CLOUDINARY IMAGE UPDATE
     if (req.file) {
-      updateData.image = `${process.env.BASE_URL}/upload/${req.file.filename}`;
+
+      const result = await cloudinary.uploader.upload(req.file.path);
+
+      updateData.image = result.secure_url;
     }
 
-    const event = await Event.findByIdAndUpdate(id, updateData, { new: true });
+    const event = await Event.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true }
+    );
 
     res.json({
       success: true,
@@ -181,7 +220,10 @@ export const updateEvent = async (req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+
+    res.status(500).json({
+      message: error.message
+    });
   }
 };
 
@@ -197,7 +239,10 @@ export const deleteEvent = async (req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+
+    res.status(500).json({
+      message: error.message
+    });
   }
 };
 
@@ -208,10 +253,15 @@ export const toggleEventStatus = async (req, res) => {
     const event = await Event.findById(req.params.id);
 
     if (!event) {
-      return res.status(404).json({ message: "Event not found" });
+      return res.status(404).json({
+        message: "Event not found"
+      });
     }
 
-    event.status = event.status === "active" ? "inactive" : "active";
+    event.status =
+      event.status === "active"
+        ? "inactive"
+        : "active";
 
     await event.save();
 
@@ -221,6 +271,9 @@ export const toggleEventStatus = async (req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+
+    res.status(500).json({
+      message: error.message
+    });
   }
 };
