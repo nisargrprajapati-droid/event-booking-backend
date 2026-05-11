@@ -1,18 +1,6 @@
 import multer from "multer";
-import fs from "fs";
 
-if (!fs.existsSync("upload")) {
-  fs.mkdirSync("upload");
-}
-
-const storage = multer.memoryStorage();({
-  destination: function (req, file, cb) {
-    cb(null, "upload");
-  },
-
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + "-" + file.originalname);
-  }
-});
+// ✅ Store file in memory for Cloudinary
+const storage = multer.memoryStorage();
 
 export const upload = multer({ storage });

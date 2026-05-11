@@ -1,8 +1,8 @@
 import CategoryModel from "../model/CategoryModel.js";
 import cloudinary from "../config/cloudinary.js";
 import streamifier from "streamifier";
-// ================= CREATE CATEGORY =================
 
+// ================= CREATE CATEGORY =================
 export const createCategory = async (req, res) => {
   try {
     const { name } = req.body;
@@ -14,14 +14,27 @@ export const createCategory = async (req, res) => {
       });
     }
 
-    console.log("FILE:", req.file);
+    // ✅ Upload image to Cloudinary using buffer
+    const streamUpload = (buffer) => {
+      return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: "categories" },
+          (error, result) => {
+            if (result) {
+              resolve(result);
+            } else {
+              reject(error);
+            }
+          }
+        );
 
-    const result = await cloudinary.uploader.upload(req.file.path, {
-      folder: "categories",
-    });
+        streamifier.createReadStream(buffer).pipe(stream);
+      });
+    };
 
-    console.log("CLOUDINARY:", result);
+    const result = await streamUpload(req.file.buffer);
 
+    // ✅ Save category
     const category = await CategoryModel.create({
       name,
       image: result.secure_url,
@@ -49,13 +62,13 @@ export const getCategory = async (req, res) => {
 
     res.json({
       success: true,
-      data
+      data,
     });
 
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -67,13 +80,13 @@ export const deleteCategory = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Category deleted"
+      message: "Category deleted",
     });
 
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
