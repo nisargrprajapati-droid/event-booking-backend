@@ -1,44 +1,65 @@
-import Category from "../model/CategoryModel.js";
+import CategoryModel from "../model/CategoryModel.js";
+import cloudinary from "../config/cloudinary.js";
+import streamifier from "streamifier";
+// ================= CREATE CATEGORY =================
+
 
 export const createCategory = async (req, res) => {
   try {
     const { name } = req.body;
 
-    if (!name || !req.file) {
-      return res.status(400).json({
+    if (!req.file) {
+      return res.json({
         success: false,
-        message: "Name and image required"
+        message: "Image is required",
       });
     }
 
-    const image = `${process.env.BASE_URL}/upload/${req.file.filename}`;
+    // 🔥 Upload using buffer (FIX)
+    const streamUpload = (req) => {
+      return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          (error, result) => {
+            if (result) resolve(result);
+            else reject(error);
+          }
+        );
 
-    const category = await Category.create({
+        streamifier.createReadStream(req.file.buffer).pipe(stream);
+      });
+    };
+
+    const result = await streamUpload(req);
+
+    const category = new CategoryModel({
       name,
-      image
+      image: result.secure_url,
     });
 
-    res.status(201).json({
+    await category.save();
+
+    res.json({
       success: true,
-      data: category
+      data: category,
     });
 
   } catch (error) {
-    console.log("CATEGORY ERROR:", error);
+    console.log("Cloudinary Error:", error);
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
 
+// ================= GET CATEGORY =================
 export const getCategory = async (req, res) => {
   try {
-    const categories = await Category.find();
+    const data = await CategoryModel.find().sort({ createdAt: -1 });
 
-    res.status(200).json({
+    res.json({
       success: true,
-      data: categories
+      data
     });
 
   } catch (error) {
@@ -49,9 +70,10 @@ export const getCategory = async (req, res) => {
   }
 };
 
+// ================= DELETE CATEGORY =================
 export const deleteCategory = async (req, res) => {
   try {
-    await Category.findByIdAndDelete(req.params.id);
+    await CategoryModel.findByIdAndDelete(req.params.id);
 
     res.json({
       success: true,

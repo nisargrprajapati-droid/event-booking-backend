@@ -1,93 +1,72 @@
-import Gallery from "../model/Gallery.js";
+import GalleryModel from "../model/Gallery.js";
+import cloudinary from "../config/cloudinary.js";
 
-/* ================= UPLOAD IMAGE ================= */
-
-export const uploadImage = async (req, res) => {
+// ================= ADD IMAGE =================
+export const addImage = async (req, res) => {
   try {
-
     const { name } = req.body;
 
-    // ✅ CHECK FILE
     if (!req.file) {
-      return res.status(400).json({
+      return res.json({
         success: false,
-        message: "Image file is required"
+        message: "Image required"
       });
     }
 
-    // ✅ SAFE BASE URL (fallback if env missing)
-    const baseUrl =
-      process.env.BASE_URL || `${req.protocol}://${req.get("host")}`;
+    // 🔥 Upload to Cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path);
 
-    // ✅ FINAL IMAGE URL
-    const imageUrl = `${baseUrl}/upload/${req.file.filename}`;
-
-    const gallery = await Gallery.create({
+    const image = new GalleryModel({
       name,
-      image: imageUrl
+      image: result.secure_url, // ✅ important
     });
 
-    res.status(201).json({
+    await image.save();
+
+    res.json({
       success: true,
-      gallery
+      image
     });
 
   } catch (error) {
-    console.error("UPLOAD ERROR:", error);
-    res.status(500).json({
+    console.log("Gallery Error:", error);
+    res.json({
       success: false,
       message: error.message
     });
   }
 };
 
-
-/* ================= GET ALL IMAGES ================= */
-
 export const getAllImages = async (req, res) => {
   try {
 
-    const images = await Gallery.find().sort({ createdAt: -1 });
+    const images = await GalleryModel.find().sort({ createdAt: -1 });
 
-    res.status(200).json({
+    res.json({
       success: true,
       images
     });
 
   } catch (error) {
-    console.error("GET IMAGES ERROR:", error);
-    res.status(500).json({
+    res.json({
       success: false,
       message: error.message
     });
   }
 };
 
-
-/* ================= DELETE IMAGE ================= */
-
 export const deleteImage = async (req, res) => {
   try {
 
-    const { id } = req.params;
+    await GalleryModel.findByIdAndDelete(req.params.id);
 
-    const image = await Gallery.findByIdAndDelete(id);
-
-    if (!image) {
-      return res.status(404).json({
-        success: false,
-        message: "Image not found"
-      });
-    }
-
-    res.status(200).json({
+    res.json({
       success: true,
-      message: "Deleted successfully"
+      message: "Image deleted"
     });
 
   } catch (error) {
-    console.error("DELETE ERROR:", error);
-    res.status(500).json({
+    res.json({
       success: false,
       message: error.message
     });
