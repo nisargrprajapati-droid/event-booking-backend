@@ -39,8 +39,9 @@ export const addImage = async (req, res) => {
 
     // SAVE IMAGE
     const image = await Gallery.create({
-      image: result.secure_url
-    });
+  name: req.body.name || "gallery-image",
+  image: result.secure_url
+});
 
     res.status(201).json({
       success: true,
