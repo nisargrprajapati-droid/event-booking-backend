@@ -1,64 +1,90 @@
-import GalleryModel from "../model/Gallery.js";
+import Gallery from "../model/Gallery.js";
 import cloudinary from "../config/cloudinary.js";
+import streamifier from "streamifier";
 
-// ================= ADD IMAGE =================
+/* ================= ADD IMAGE ================= */
+
 export const addImage = async (req, res) => {
   try {
-    const { name } = req.body;
 
     if (!req.file) {
-      return res.json({
+      return res.status(400).json({
         success: false,
-        message: "Image required"
+        message: "Image is required"
       });
     }
 
-    // 🔥 Upload to Cloudinary
-    const result = await cloudinary.uploader.upload(req.file.path);
+    // CLOUDINARY BUFFER UPLOAD
+    const streamUpload = (buffer) => {
+      return new Promise((resolve, reject) => {
 
-    const image = new GalleryModel({
-      name,
-      image: result.secure_url, // ✅ important
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: "gallery" },
+          (error, result) => {
+
+            if (result) {
+              resolve(result);
+            } else {
+              reject(error);
+            }
+
+          }
+        );
+
+        streamifier.createReadStream(buffer).pipe(stream);
+      });
+    };
+
+    const result = await streamUpload(req.file.buffer);
+
+    // SAVE IMAGE
+    const image = await Gallery.create({
+      image: result.secure_url
     });
 
-    await image.save();
-
-    res.json({
+    res.status(201).json({
       success: true,
-      image
+      data: image
     });
 
   } catch (error) {
+
     console.log("Gallery Error:", error);
-    res.json({
+
+    res.status(500).json({
       success: false,
       message: error.message
     });
   }
 };
+
+/* ================= GET ALL IMAGES ================= */
 
 export const getAllImages = async (req, res) => {
   try {
 
-    const images = await GalleryModel.find().sort({ createdAt: -1 });
+    const images = await Gallery.find().sort({ createdAt: -1 });
 
     res.json({
       success: true,
-      images
+      data: images
     });
 
   } catch (error) {
-    res.json({
+
+    res.status(500).json({
       success: false,
       message: error.message
     });
   }
 };
 
+/* ================= DELETE IMAGE ================= */
+
 export const deleteImage = async (req, res) => {
   try {
 
-    await GalleryModel.findByIdAndDelete(req.params.id);
+    await Gallery.findByIdAndDelete(req.params.id);
 
     res.json({
       success: true,
@@ -66,7 +92,8 @@ export const deleteImage = async (req, res) => {
     });
 
   } catch (error) {
-    res.json({
+
+    res.status(500).json({
       success: false,
       message: error.message
     });
