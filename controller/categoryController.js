@@ -3,48 +3,38 @@ import cloudinary from "../config/cloudinary.js";
 import streamifier from "streamifier";
 // ================= CREATE CATEGORY =================
 
-
 export const createCategory = async (req, res) => {
   try {
     const { name } = req.body;
 
     if (!req.file) {
-      return res.json({
+      return res.status(400).json({
         success: false,
         message: "Image is required",
       });
     }
 
-    // 🔥 Upload using buffer (FIX)
-    const streamUpload = (req) => {
-      return new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          (error, result) => {
-            if (result) resolve(result);
-            else reject(error);
-          }
-        );
+    console.log("FILE:", req.file);
 
-        streamifier.createReadStream(req.file.buffer).pipe(stream);
-      });
-    };
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "categories",
+    });
 
-    const result = await streamUpload(req);
+    console.log("CLOUDINARY:", result);
 
-    const category = new CategoryModel({
+    const category = await CategoryModel.create({
       name,
       image: result.secure_url,
     });
 
-    await category.save();
-
-    res.json({
+    res.status(201).json({
       success: true,
       data: category,
     });
 
   } catch (error) {
-    console.log("Cloudinary Error:", error);
+    console.log("CATEGORY ERROR:", error);
+
     res.status(500).json({
       success: false,
       message: error.message,
